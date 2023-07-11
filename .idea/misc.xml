@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/drawable/options_custom_form.xml" value="0.37864583333333335" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/activity_disco_view_group.xml" value="0.3625" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/activity_disconnection_form.xml" value="0.33" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/activity_disconnection_list.xml" value="0.18854166666666666" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/activity_download.xml" value="0.33" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/activity_login.xml" value="0.3625" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/activity_main.xml" value="0.3625" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/activity_settings.xml" value="0.19166666666666668" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/activity_upload_disconnection.xml" value="0.3625" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/recycler_view_disco_group.xml" value="0.3625" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/recyclerview_layout_download.xml" value="0.3625" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/layout/recyclerview_layout_menu.xml" value="0.3625" />
+        <entry key="..\:/AndroidStudioProjects/Disconnection/app/src/main/res/xml/network_security_config.xml" value="0.3625" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
