@@ -80,10 +80,16 @@ public class DisconnectionList {
     @ColumnInfo(name = "DisconnectionDate")
     private String DisconnectionDate;
 
+    @ColumnInfo(name = "LastReading")
+    private String LastReading;
+
+    @ColumnInfo(name = "Selected")
+    private boolean Selected;
+
     public DisconnectionList() {
     }
 
-    public DisconnectionList(@NonNull String id, String scheduleId, String disconnectorName, String userId, String accountNumber, String servicePeriodEnd, String accountCoordinates, String latitude, String longitude, String status, String notes, String netAmount, String surcharge, String serviceFee, String others, String paidAmount, String ORNumber, String ORDate, String uploadStatus, String consumerName, String consumerAddress, String meterNumber, String poleNumber, String disconnectionDate) {
+    public DisconnectionList(@NonNull String id, String scheduleId, String disconnectorName, String userId, String accountNumber, String servicePeriodEnd, String accountCoordinates, String latitude, String longitude, String status, String notes, String netAmount, String surcharge, String serviceFee, String others, String paidAmount, String ORNumber, String ORDate, String uploadStatus, String consumerName, String consumerAddress, String meterNumber, String poleNumber, String disconnectionDate, String lastReading, boolean selected) {
         this.id = id;
         ScheduleId = scheduleId;
         DisconnectorName = disconnectorName;
@@ -108,6 +114,8 @@ public class DisconnectionList {
         MeterNumber = meterNumber;
         PoleNumber = poleNumber;
         DisconnectionDate = disconnectionDate;
+        LastReading = lastReading;
+        Selected = selected;
     }
 
     @NonNull
@@ -301,5 +309,21 @@ public class DisconnectionList {
 
     public void setDisconnectionDate(String disconnectionDate) {
         DisconnectionDate = disconnectionDate;
+    }
+
+    public String getLastReading() {
+        return LastReading;
+    }
+
+    public void setLastReading(String lastReading) {
+        LastReading = lastReading;
+    }
+
+    public boolean isSelected() {
+        return Selected;
+    }
+
+    public void setSelected(boolean selected) {
+        Selected = selected;
     }
 }

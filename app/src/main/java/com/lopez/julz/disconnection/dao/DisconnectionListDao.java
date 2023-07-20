@@ -18,7 +18,7 @@ public interface DisconnectionListDao {
     @Update
     void updateAll(DisconnectionList... disconnectionLists);
 
-    @Query("SELECT * FROM DisconnectionList WHERE UploadStatus IS NULL")
+    @Query("SELECT * FROM DisconnectionList WHERE UploadStatus='Uploadable'")
     List<DisconnectionList> getUploadable();
 
     @Query("SELECT * FROM DisconnectionList WHERE id=:id")
@@ -30,6 +30,24 @@ public interface DisconnectionListDao {
     @Query("SELECT AccountNumber, ConsumerName, MeterNumber, ConsumerAddress FROM DisconnectionList WHERE UploadStatus IS NULL AND ScheduleId= :schedId GROUP BY AccountNumber, ConsumerName, MeterNumber, ConsumerAddress ORDER BY ConsumerName")
     List<DiscoListGrouped> getAllFromSched(String schedId);
 
+    @Query("SELECT AccountNumber, ConsumerName, MeterNumber, ConsumerAddress FROM DisconnectionList WHERE UploadStatus='Uploadable' AND ScheduleId= :schedId GROUP BY AccountNumber, ConsumerName, MeterNumber, ConsumerAddress ORDER BY ConsumerName")
+    List<DiscoListGrouped> getGroupedUploadable(String schedId);
+
     @Query("SELECT * FROM DisconnectionList WHERE AccountNumber = :acctNo AND ScheduleId = :schedId")
     List<DisconnectionList> getConsumerDiscoData(String acctNo, String schedId);
+
+    @Query("SELECT * FROM DisconnectionList WHERE ScheduleId= :schedId")
+    List<DisconnectionList> getAllMapView(String schedId);
+
+    @Query("SELECT COUNT(id) FROM DisconnectionList WHERE ScheduleId= :schedId AND UploadStatus IS NULL")
+    int getCountBySched(String schedId);
+
+    @Query("SELECT AccountNumber FROM DisconnectionList WHERE ScheduleId= :schedId AND Status='Disconnected' AND (UploadStatus IS NULL OR UploadStatus='Uploadable') GROUP BY AccountNumber")
+    List<String> getDisconnectedCountBySched(String schedId);
+
+    @Query("SELECT * FROM DisconnectionList WHERE ScheduleId= :schedId AND (UploadStatus IS NULL OR UploadStatus='Uploadable')")
+    List<DisconnectionList> getCollected(String schedId);
+
+    @Query("SELECT AccountNumber FROM DisconnectionList WHERE ScheduleId= :schedId AND Status='Paid' AND (UploadStatus IS NULL OR UploadStatus='Uploadable') GROUP BY AccountNumber")
+    List<String> getPaidAccounts(String schedId);
 }

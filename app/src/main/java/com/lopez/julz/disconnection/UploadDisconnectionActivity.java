@@ -25,6 +25,7 @@ import com.lopez.julz.disconnection.dao.Settings;
 import com.lopez.julz.disconnection.helpers.AlertHelpers;
 import com.lopez.julz.disconnection.helpers.ObjectHelpers;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,8 +56,6 @@ public class UploadDisconnectionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_upload_disconnection);
 
         db = Room.databaseBuilder(this, AppDatabase.class, ObjectHelpers.dbName()).fallbackToDestructiveMigration().build();
-
-
 
         uploadToolbar = findViewById(R.id.uploadToolbar);
         setSupportActionBar(uploadToolbar);
@@ -126,7 +125,11 @@ public class UploadDisconnectionActivity extends AppCompatActivity {
 
                             progress++;
                         } else {
-                            Log.e("ERR_UPLOAD_DSCO", response.message() + "\n" + response.raw());
+                            try {
+                                Log.e("ERR_UPLOAD_DSCO", response.message() + "\n" + response.errorBody().string());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                             AlertHelpers.showMessageDialog(UploadDisconnectionActivity.this, "Upload Error", "An error occurred during the upload.\n" + response.message() + "\n" + response.raw());
                         }
                     }

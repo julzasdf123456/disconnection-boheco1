@@ -81,6 +81,14 @@ public class DiscoViewGroup extends AppCompatActivity {
         protected Void doInBackground(Void... voids) {
             try {
                 schedulesList.addAll(db.schedulesDao().getActiveSchedules());
+
+                for(int i=0; i<schedulesList.size(); i++) {
+                    int count = db.disconnectionListDao().getCountBySched(schedulesList.get(i).getId());
+                    // remove finished
+                    if (count < 1) {
+                        schedulesList.remove(i);
+                    }
+                }
             } catch (Exception e) {
                 Log.e("ERR_GETGRPINGS", e.getMessage());
             }

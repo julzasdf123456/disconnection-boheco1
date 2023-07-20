@@ -27,6 +27,7 @@ import com.lopez.julz.disconnection.adapters.UnpaidMonthsAdapter;
 import com.lopez.julz.disconnection.dao.AppDatabase;
 import com.lopez.julz.disconnection.dao.DisconnectionList;
 import com.lopez.julz.disconnection.helpers.AlertHelpers;
+import com.lopez.julz.disconnection.helpers.MonthSelect;
 import com.lopez.julz.disconnection.helpers.ObjectHelpers;
 import com.mapbox.android.core.permissions.PermissionsListener;
 import com.mapbox.android.core.permissions.PermissionsManager;
@@ -49,7 +50,7 @@ import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DisconnectionFormActivity extends AppCompatActivity implements OnMapReadyCallback, PermissionsListener {
+public class DisconnectionFormActivity extends AppCompatActivity implements OnMapReadyCallback, PermissionsListener, MonthSelect {
 
     public TextView accountName, accountNo, change;
     public TextView meterNo, address, poleNo, amountDue, totalSurcharges, serviceFee, totalAmountDue;
@@ -79,7 +80,7 @@ public class DisconnectionFormActivity extends AppCompatActivity implements OnMa
 
     public double totalAmountPayable = 0;
 
-    public EditText amountPaid, remarks;
+    public EditText amountPaid, remarks, lastReading;
     public RadioGroup assessment;
 
     @Override
@@ -112,8 +113,9 @@ public class DisconnectionFormActivity extends AppCompatActivity implements OnMa
         mapView = findViewById(R.id.mapviewDisconnectionForm);
         meterNo = findViewById(R.id.meterNo);
         poleNo = findViewById(R.id.poleNo);
+        lastReading = findViewById(R.id.lastReading);
         unpaidMonthsRecyclerView = findViewById(R.id.unpaidMonthsRecyclerView);
-        unpaidMonthsAdapter = new UnpaidMonthsAdapter(this, disconnectionList);
+        unpaidMonthsAdapter = new UnpaidMonthsAdapter(this, disconnectionList, this);
         unpaidMonthsRecyclerView.setAdapter(unpaidMonthsAdapter);
         unpaidMonthsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -170,30 +172,17 @@ public class DisconnectionFormActivity extends AppCompatActivity implements OnMa
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                if (locationComponent != null) {
-//                    try {
-//                        disconnectionList.setLatitude(locationComponent.getLastKnownLocation().getLatitude() + "");
-//                        disconnectionList.setLongitude(locationComponent.getLastKnownLocation().getLongitude() + "");
-//                    } catch (Exception e) {
-//                        Log.e("ERR_GET_LOC", e.getMessage());
-//                    }
-//                }
-//                disconnectionList.setUserId(userId);
-//                if (disconnectButton.isChecked()) {
-//                    disconnectionList.setUploadStatus(null);
-//                } else {
-//                    disconnectionList.setUploadStatus("No");
-//                }
-//
-//                new SaveDisconnectionData().execute();
-
                 String assessmentSelected = ObjectHelpers.getSelectedTextFromRadioGroup(assessment, assessment);
                 if (assessmentSelected != null && assessmentSelected.length() > 0) {
                     double amnt = ObjectHelpers.doubleStringNull(amountPaid.getText().toString());
-                    if (assessmentSelected.equals("Paid") && totalAmountPayable > amnt) {
-                        AlertHelpers.showMessageDialog(DisconnectionFormActivity.this, "Invalid amount inputted!", "Amount paid should not be less than the amount due.");
+                    if (assessmentSelected.equals("Paid") && totalAmountPayable == 0) {
+                        AlertHelpers.showMessageDialog(DisconnectionFormActivity.this, "Oops!", "No billing month selected!");
                     } else {
-                        new SaveDisconnectionData().execute();
+                        if (assessmentSelected.equals("Paid") && totalAmountPayable > amnt) {
+                            AlertHelpers.showMessageDialog(DisconnectionFormActivity.this, "Invalid amount inputted!", "Amount paid should not be less than the amount due.");
+                        } else {
+                            new SaveDisconnectionData().execute();
+                        }
                     }
                 } else {
                     new SaveDisconnectionData().execute();
@@ -404,6 +393,11 @@ public class DisconnectionFormActivity extends AppCompatActivity implements OnMa
         }
     }
 
+    @Override
+    public void itemSelect(View view, int position) {
+        getTotal();
+    }
+
     public class GetDetails extends AsyncTask<Void, Void, Void> {
 
         @Override
@@ -421,26 +415,25 @@ public class DisconnectionFormActivity extends AppCompatActivity implements OnMa
             super.onPostExecute(unused);
 
             if (disconnectionList != null && disconnectionList.size() > 0) {
+                for (DisconnectionList disco:
+                     disconnectionList) {
+                    if (disco.getUploadStatus() != null) {
+
+                    } else {
+                        disco.setSelected(true);
+                    }
+                }
+
                 DisconnectionList dscList = disconnectionList.get(0);
                 accountName.setText(dscList.getConsumerName());
                 accountNo.setText(dscList.getAccountNumber());
                 meterNo.setText(dscList.getMeterNumber());
                 address.setText(dscList.getConsumerAddress());
                 poleNo.setText(dscList.getPoleNumber());
+                lastReading.setText(dscList.getLastReading());
                 unpaidMonthsAdapter.notifyDataSetChanged();
 
-                double totalAmount = ObjectHelpers.getTotalAmount(disconnectionList);
-                double totalSurcharge = ObjectHelpers.getTotalSucharges(disconnectionList);
-                double serviceFees = 33.6;
-                totalAmountPayable = totalAmount + totalSurcharge + serviceFees;
-
-                amountDue.setText(ObjectHelpers.roundTwo(totalAmount));
-                totalSurcharges.setText(ObjectHelpers.roundTwo(totalSurcharge));
-                serviceFee.setText(ObjectHelpers.roundTwo(serviceFees));
-                totalAmountDue.setText(ObjectHelpers.roundTwo(totalAmountPayable));
-
-                // IF DATA IS ALREADY INPUTTED
-                amountPaid.setText((ObjectHelpers.getTotalAmountPaid(disconnectionList) > 0 ? ObjectHelpers.getTotalAmountPaid(disconnectionList) : "")+"");
+                getTotal();
 
                 if (dscList.getStatus() != null && dscList.getStatus().length() > 0) {
                     assessment.check(getAssessment(dscList.getStatus()));
@@ -459,8 +452,8 @@ public class DisconnectionFormActivity extends AppCompatActivity implements OnMa
         protected Void doInBackground(Void... Void) {
             try {
                 String assessmentSelected = ObjectHelpers.getSelectedTextFromRadioGroup(assessment, assessment);
+                double amnt = ObjectHelpers.doubleStringNull(amountPaid.getText().toString());
                 if (assessmentSelected != null && assessmentSelected.length() > 0) {
-                    double amnt = ObjectHelpers.doubleStringNull(amountPaid.getText().toString());
                     if (assessmentSelected.equals("Paid") && totalAmountPayable > amnt) {
 
                     } else {
@@ -472,6 +465,7 @@ public class DisconnectionFormActivity extends AppCompatActivity implements OnMa
                                 disco.setNotes(remarks.getText().toString());
                                 disco.setPaidAmount("0");
                                 disco.setServiceFee("0");
+                                disco.setSelected(true);
                                 if (locationComponent != null) {
                                     try {
                                         disco.setLatitude(locationComponent.getLastKnownLocation().getLatitude() + "");
@@ -481,15 +475,24 @@ public class DisconnectionFormActivity extends AppCompatActivity implements OnMa
                                     }
                                 }
                                 disco.setDisconnectionDate(ObjectHelpers.getCurrentTimestamp());
+                                disco.setLastReading(lastReading.getText().toString());
                                 db.disconnectionListDao().updateAll(disco);
                             }
                         } else if (assessmentSelected.equals("Paid")) {
                             for (DisconnectionList disco:
                                     disconnectionList) {
-                                disco.setStatus(assessmentSelected);
                                 disco.setUploadStatus("Uploadable");
                                 disco.setNotes(remarks.getText().toString());
-                                disco.setPaidAmount(ObjectHelpers.getTotalPaidAmount(disco) + "");
+                                if (disco.isSelected()) {
+                                    disco.setPaidAmount(ObjectHelpers.getTotalPaidAmount(disco) + "");
+                                    disco.setStatus("Paid");
+                                    disco.setSelected(true);
+                                } else {
+                                    disco.setPaidAmount("0");
+                                    disco.setStatus("Promised");
+                                    disco.setSelected(false);
+                                }
+
                                 disco.setServiceFee("0");
                                 if (locationComponent != null) {
                                     try {
@@ -500,27 +503,91 @@ public class DisconnectionFormActivity extends AppCompatActivity implements OnMa
                                     }
                                 }
                                 disco.setDisconnectionDate(ObjectHelpers.getCurrentTimestamp());
+                                disco.setLastReading(lastReading.getText().toString());
+                                db.disconnectionListDao().updateAll(disco);
+                            }
+                        } else if (assessmentSelected == null | assessmentSelected.length() <= 0) {
+                            for (DisconnectionList disco:
+                                    disconnectionList) {
+                                disco.setUploadStatus("Uploadable");
+                                disco.setNotes(remarks.getText().toString());
+                                if (disco.isSelected()) {
+                                    disco.setPaidAmount(ObjectHelpers.getTotalPaidAmount(disco) + "");
+                                    disco.setStatus("Paid");
+                                    disco.setSelected(true);
+                                } else {
+                                    disco.setPaidAmount("0");
+                                    disco.setStatus("Promised");
+                                    disco.setSelected(false);
+                                }
+                                disco.setServiceFee("0");
+                                if (locationComponent != null) {
+                                    try {
+                                        disco.setLatitude(locationComponent.getLastKnownLocation().getLatitude() + "");
+                                        disco.setLongitude(locationComponent.getLastKnownLocation().getLongitude() + "");
+                                    } catch (Exception e) {
+                                        Log.e("ERR_GET_LOC", e.getMessage());
+                                    }
+                                }
+                                disco.setDisconnectionDate(ObjectHelpers.getCurrentTimestamp());
+                                disco.setLastReading(lastReading.getText().toString());
                                 db.disconnectionListDao().updateAll(disco);
                             }
                         }
                     }
                 } else {
-                    for (DisconnectionList disco:
-                            disconnectionList) {
-                        disco.setStatus(assessmentSelected);
-                        disco.setNotes(remarks.getText().toString());
-                        disco.setPaidAmount(ObjectHelpers.getTotalPaidAmount(disco) + "");
-                        disco.setServiceFee("0");
-                        if (locationComponent != null) {
-                            try {
-                                disco.setLatitude(locationComponent.getLastKnownLocation().getLatitude() + "");
-                                disco.setLongitude(locationComponent.getLastKnownLocation().getLongitude() + "");
-                            } catch (Exception e) {
-                                Log.e("ERR_GET_LOC", e.getMessage());
+                    if (totalAmountPayable > amnt) {
+                        for (DisconnectionList disco:
+                                disconnectionList) {
+                            disco.setNotes(remarks.getText().toString());
+                            if (disco.isSelected()) {
+                                disco.setPaidAmount(amnt + "");
+                                disco.setStatus(assessmentSelected);
+                            } else {
+                                disco.setPaidAmount("0");
+                                disco.setStatus("Promised");
                             }
+                            disco.setSelected(true);
+                            disco.setServiceFee("0");
+                            if (locationComponent != null) {
+                                try {
+                                    disco.setLatitude(locationComponent.getLastKnownLocation().getLatitude() + "");
+                                    disco.setLongitude(locationComponent.getLastKnownLocation().getLongitude() + "");
+                                } catch (Exception e) {
+                                    Log.e("ERR_GET_LOC", e.getMessage());
+                                }
+                            }
+                            disco.setDisconnectionDate(ObjectHelpers.getCurrentTimestamp());
+                            disco.setLastReading(lastReading.getText().toString());
+                            db.disconnectionListDao().updateAll(disco);
                         }
-                        disco.setDisconnectionDate(ObjectHelpers.getCurrentTimestamp());
-                        db.disconnectionListDao().updateAll(disco);
+                    } else {
+                        for (DisconnectionList disco:
+                                disconnectionList) {
+                            disco.setUploadStatus("Uploadable");
+                            disco.setNotes(remarks.getText().toString());
+                            if (disco.isSelected()) {
+                                disco.setPaidAmount(ObjectHelpers.getTotalPaidAmount(disco) + "0");
+                                disco.setStatus("Paid");
+                                disco.setSelected(true);
+                            } else {
+                                disco.setPaidAmount("");
+                                disco.setStatus("Promised");
+                                disco.setSelected(false);
+                            }
+                            disco.setServiceFee("0");
+                            if (locationComponent != null) {
+                                try {
+                                    disco.setLatitude(locationComponent.getLastKnownLocation().getLatitude() + "");
+                                    disco.setLongitude(locationComponent.getLastKnownLocation().getLongitude() + "");
+                                } catch (Exception e) {
+                                    Log.e("ERR_GET_LOC", e.getMessage());
+                                }
+                            }
+                            disco.setDisconnectionDate(ObjectHelpers.getCurrentTimestamp());
+                            disco.setLastReading(lastReading.getText().toString());
+                            db.disconnectionListDao().updateAll(disco);
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -548,6 +615,26 @@ public class DisconnectionFormActivity extends AppCompatActivity implements OnMa
             }
         } else {
             return 0;
+        }
+    }
+
+    public void getTotal() {
+        try {
+            double totalAmount = ObjectHelpers.getTotalAmount(disconnectionList);
+            double totalSurcharge = ObjectHelpers.getTotalSucharges(disconnectionList);
+            double serviceFees = 33.6;
+            totalAmountPayable = totalAmount + totalSurcharge + serviceFees;
+
+            amountDue.setText(ObjectHelpers.roundTwo(totalAmount));
+            totalSurcharges.setText(ObjectHelpers.roundTwo(totalSurcharge));
+            serviceFee.setText(ObjectHelpers.roundTwo(serviceFees));
+            totalAmountDue.setText(ObjectHelpers.roundTwo(totalAmountPayable));
+
+            // IF DATA IS ALREADY INPUTTED
+            amountPaid.setText((ObjectHelpers.getTotalAmountPaid(disconnectionList) > 0 ? ObjectHelpers.roundTwoNoComma((ObjectHelpers.getTotalAmountPaid(disconnectionList) + 33.6)) : "")+"");
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error getting total!", Toast.LENGTH_SHORT).show();
         }
     }
 }

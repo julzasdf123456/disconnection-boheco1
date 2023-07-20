@@ -163,6 +163,15 @@ public class ObjectHelpers {
         }
     }
 
+    public static String roundTwoNoComma(Double doubleX) {
+        try {
+            DecimalFormat df = new DecimalFormat("#.##");
+            return df.format(doubleX);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
     public static Double doubleStringNull(String regex) {
         try {
             if (regex.equals(null)) {
@@ -244,7 +253,12 @@ public class ObjectHelpers {
             double sum = 0;
             for (DisconnectionList disco:
                  disconnectionLists) {
-                double amnt = Double.valueOf(disco.getNetAmount());
+                double amnt = 0;
+                if (disco.isSelected()) {
+                    amnt = Double.valueOf(disco.getNetAmount());
+                } else {
+                    amnt = 0;
+                }
                 sum += amnt;
             }
 
@@ -260,7 +274,12 @@ public class ObjectHelpers {
             double sum = 0;
             for (DisconnectionList disco:
                     disconnectionLists) {
-                double amnt = Double.valueOf(disco.getSurcharge());
+                double amnt = 0;
+                if (disco.isSelected()) {
+                    amnt = Double.valueOf(disco.getSurcharge());
+                } else {
+                    amnt = 0;
+                }
                 sum += amnt;
             }
 
@@ -276,7 +295,12 @@ public class ObjectHelpers {
             double sum = 0;
             for (DisconnectionList disco:
                     disconnectionLists) {
-                double amnt = Double.valueOf(disco.getPaidAmount());
+                double amnt = 0;
+                if (disco.isSelected()) {
+                    amnt = Double.valueOf(disco.getPaidAmount());
+                } else {
+                    amnt = 0;
+                }
                 sum += amnt;
             }
 

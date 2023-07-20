@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/logs"
+        android:title="Disconnection Log"
+        android:icon="@drawable/ic_baseline_checklist_24"
+        app:showAsAction="always"
+        app:iconTint="@color/purple_500"/>
+
+    <item
+        android:id="@+id/mapView"
+        android:title="Map View"
+        android:icon="@drawable/ic_baseline_location_on_24"
+        app:showAsAction="always"
+        app:iconTint="@color/purple_500"/>
+
+    <item
+        android:id="@+id/infoStats"
+        android:title="My Statistics"
+        android:icon="@drawable/ic_baseline_info_24"
+        app:showAsAction="always"
+        app:iconTint="@color/purple_500"/>
+</menu>

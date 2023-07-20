@@ -7,19 +7,23 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.lopez.julz.disconnection.adapters.DiscoListAdapter;
 import com.lopez.julz.disconnection.dao.AppDatabase;
 import com.lopez.julz.disconnection.dao.DiscoListGrouped;
 import com.lopez.julz.disconnection.dao.DisconnectionList;
+import com.lopez.julz.disconnection.helpers.AlertHelpers;
 import com.lopez.julz.disconnection.helpers.ObjectHelpers;
 
 import java.util.ArrayList;
@@ -122,9 +126,26 @@ public class DisconnectionListActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.disco_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish();
+        } else if (item.getItemId() == R.id.mapView) {
+            Intent intent = new Intent(DisconnectionListActivity.this, MapView.class);
+            intent.putExtra("SCHEDULEID", scheduleId);
+            intent.putExtra("USERID", userId);
+            startActivity(intent);
+        } else if (item.getItemId() == R.id.logs) {
+            Intent intent = new Intent(DisconnectionListActivity.this, Logs.class);
+            intent.putExtra("SCHEDULEID", scheduleId);
+            startActivity(intent);
+        } else if (item.getItemId() == R.id.infoStats) {
+            new GetStatistics().execute();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -152,7 +173,39 @@ public class DisconnectionListActivity extends AppCompatActivity {
             super.onPostExecute(unused);
             discoListAdapter.notifyDataSetChanged();
 
-            title.setText("Disconnection List (" + disconnectionList.size() + ")");
+            title.setText("Disco List (" + disconnectionList.size() + ")");
+        }
+    }
+
+    public class GetStatistics extends AsyncTask<Void, Void, Void> {
+
+        int discoTotal = 0;
+        double totalCollection = 0;
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                discoTotal = db.disconnectionListDao().getDisconnectedCountBySched(scheduleId).size();
+                List<DisconnectionList> ttlCol = db.disconnectionListDao().getCollected(scheduleId);
+                totalCollection = ObjectHelpers.getTotalAmountPaid(ttlCol);
+                totalCollection = totalCollection + (33.6 * db.disconnectionListDao().getPaidAccounts(scheduleId).size());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            super.onPostExecute(unused);
+            try {
+                AlertHelpers.showMessageDialog(DisconnectionListActivity.this, "My Disconnection Statistics", "Disconnected Accounts: " + discoTotal
+                        + "\nTotal Collection: " + ObjectHelpers.roundTwo(totalCollection)
+                        + "\nYeah");
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(DisconnectionListActivity.this, "Error getting statistics!", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }

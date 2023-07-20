@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase;
         DisconnectionList.class,
         Settings.class,
         Schedules.class,
-}, version = 12)
+}, version = 14)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract UsersDao usersDao();
 

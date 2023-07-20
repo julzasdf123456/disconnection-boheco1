@@ -19,6 +19,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Disconnection">
         <activity
+            android:name=".Logs"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".MapView"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".DiscoViewGroup"
             android:exported="true" />
         <activity

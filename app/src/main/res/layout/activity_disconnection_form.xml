@@ -366,10 +366,21 @@
                         </RadioGroup>
 
                         <EditText
+                            android:id="@+id/lastReading"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Last Reading"
+                            android:padding="5dp"
+                            android:layout_marginBottom="5dp"
+                            android:background="@drawable/options_custom_form"
+                            android:inputType="numberDecimal"/>
+
+                        <EditText
                             android:id="@+id/remarks"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Remarks"
+                            android:padding="5dp"
                             android:background="@drawable/options_custom_form"
                             android:inputType="textMultiLine"
                             android:lines="2"/>
